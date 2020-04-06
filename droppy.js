@@ -13,31 +13,31 @@ if (require("util").inspect.defaultOptions) {
   require("util").inspect.defaultOptions.depth = null;
 }
 
-const fs   = require("graceful-fs");
-const pkg  = require("./package.json");
+const fs = require("graceful-fs");
+const pkg = require("./package.json");
 
 process.title = pkg.name;
 process.chdir(__dirname);
 
 const cmds = {
-  start     : "start                  Start the server",
-  stop      : "stop                   Stop all daemonized servers",
-  config    : "config                 Edit the config",
-  list      : "list                   List users",
-  add       : "add <user> <pass> [p]  Add or update a user. Specify 'p' for privileged",
-  del       : "del <user>             Delete a user",
-  build     : "build                  Build client resources",
-  version   : "version, -v            Print version",
+  start: "start                  Start the server",
+  stop: "stop                   Stop all daemonized servers",
+  config: "config                 Edit the config",
+  list: "list                   List users",
+  add: "add <user> <pass> [p]  Add or update a user. Specify 'p' for privileged",
+  del: "del <user>             Delete a user",
+  build: "build                  Build client resources",
+  version: "version, -v            Print version",
 };
 
 const opts = {
-  configdir : "-c, --configdir <dir>  Config directory. Default: ~/.droppy/config",
-  filesdir  : "-f, --filesdir <dir>   Files directory. Default: ~/.droppy/files",
-  daemon    : "-d, --daemon           Daemonize (background) process",
-  log       : "-l, --log <file>       Log to file instead of stdout",
-  dev       : "--dev                  Enable developing mode",
-  color     : "--color                Force-enable colored log output",
-  nocolor   : "--no-color             Force-disable colored log output",
+  configdir: "-c, --configdir <dir>  Config directory. Default: ~/.droppy/config",
+  filesdir: "-f, --filesdir <dir>   Files directory. Default: ~/.droppy/files",
+  daemon: "-d, --daemon           Daemonize (background) process",
+  log: "-l, --log <file>       Log to file instead of stdout",
+  dev: "--dev                  Enable developing mode",
+  color: "--color                Force-enable colored log output",
+  nocolor: "--no-color             Force-disable colored log output",
 };
 
 if (argv.v || argv.V || argv.version) {
@@ -77,7 +77,7 @@ if (!argv._.length) {
   process.exit(0);
 }
 
-const cmd  = argv._[0];
+const cmd = argv._[0];
 const args = argv._.slice(1);
 
 if (cmds[cmd]) {
@@ -197,9 +197,9 @@ function printUsers(users) {
 }
 
 function findEditor(cb) {
-  const editors    = ["vim", "nano", "vi", "npp", "pico", "emacs", "notepad"];
-  const basename   = require("path").basename;
-  const which      = require("which");
+  const editors = ["vim", "nano", "vi", "npp", "pico", "emacs", "notepad"];
+  const basename = require("path").basename;
+  const which = require("which");
   const userEditor = basename(process.env.VISUAL || process.env.EDITOR);
 
   if (!editors.includes(userEditor)) {

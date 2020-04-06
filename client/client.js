@@ -1,4 +1,4 @@
-(function ($) {
+(function($) {
   "use strict";
 
   const droppy = Object.create(null);
@@ -10,20 +10,20 @@
   //  Feature Detects
   // ============================================================================
   droppy.detects = {
-    directoryUpload: (function () {
+    directoryUpload: (function() {
       const el = document.createElement("input");
       return droppy.dir.some((prop) => {
         return prop in el;
       });
     })(),
-    audioTypes: (function () {
+    audioTypes: (function() {
       const types = {}, el = document.createElement("audio");
       Object.keys(droppy.audioTypes).forEach((type) => {
         types[droppy.audioTypes[type]] = Boolean(el.canPlayType(droppy.audioTypes[type]).replace(/no/, ""));
       });
       return types;
     })(),
-    videoTypes: (function () {
+    videoTypes: (function() {
       const types = {}, el = document.createElement("video");
       Object.keys(droppy.videoTypes).forEach((type) => {
         types[droppy.videoTypes[type]] = Boolean(el.canPlayType(droppy.videoTypes[type]).replace(/no/, ""));
@@ -36,7 +36,7 @@
   };
 
   // Transition of freshly inserted elements
-  $.fn.transition = function (oldClass, newClass) {
+  $.fn.transition = function(oldClass, newClass) {
     if (!newClass) {
       newClass = oldClass;
       oldClass = null;
@@ -57,7 +57,7 @@
   };
 
   // transitionend helper, makes sure the callback gets fired regardless if the transition gets cancelled
-  $.fn.transitionend = function (callback) {
+  $.fn.transitionend = function(callback) {
     if (!this.length) return;
     let duration, called = false;
     const el = this[0];
@@ -79,7 +79,7 @@
   };
 
   // Class swapping helper
-  $.fn.replaceClass = function (search, replacement) {
+  $.fn.replaceClass = function(search, replacement) {
     let el, classes, matches, i = this.length, hasClass = false;
     while (--i >= 0) {
       el = this[i];
@@ -103,10 +103,10 @@
     return this;
   };
 
-  Handlebars.registerHelper("select", function (sel, opts) {
-    return opts.fn(this).replace(new RegExp(' value="' + sel + '"'), "$& selected=");
+  Handlebars.registerHelper("select", function(sel, opts) {
+    return opts.fn(this).replace(new RegExp(" value=\"" + sel + "\""), "$& selected=");
   });
-  Handlebars.registerHelper("is", function (a, b, opts) {
+  Handlebars.registerHelper("is", function(a, b, opts) {
     return a === b ? opts.fn(this) : opts.inverse(this);
   });
 
@@ -124,7 +124,7 @@
   Handlebars.registerHelper("svg", svg);
 
   function promisify(fn) {
-    return function () {
+    return function() {
       return new Promise(resolve => {
         fn(result => resolve(result));
       });
@@ -182,17 +182,17 @@
   });
   if (doSave) savePrefs(prefs);
 
-  droppy.get = function (pref) {
+  droppy.get = function(pref) {
     prefs = loadPrefs();
     return prefs[pref];
   };
 
-  droppy.set = function (pref, value) {
+  droppy.set = function(pref, value) {
     prefs[pref] = value;
     savePrefs(prefs);
   };
 
-  droppy.del = function (pref) {
+  droppy.del = function(pref) {
     delete prefs[pref];
     savePrefs(prefs);
   };
@@ -341,106 +341,106 @@
       droppy.socketWait = false;
 
       switch (msg.type) {
-        case "UPDATE_DIRECTORY": {
-          if (typeof view[0].dataset.type === "undefined" || view[0].switchRequest) {
-            view[0].dataset.type = "directory"; // For initial loading
+      case "UPDATE_DIRECTORY": {
+        if (typeof view[0].dataset.type === "undefined" || view[0].switchRequest) {
+          view[0].dataset.type = "directory"; // For initial loading
+        }
+        if (!view.length) return;
+        if (view[0].dataset.type === "directory") {
+          if (msg.folder !== getViewLocation(view)) {
+            view[0].currentFile = null;
+            view[0].currentFolder = msg.folder;
+            if (view[0].vId === 0) setTitle(basename(msg.folder));
+            replaceHistory(view, join(view[0].currentFolder, view[0].currentFile));
+            updatePath(view);
           }
-          if (!view.length) return;
-          if (view[0].dataset.type === "directory") {
-            if (msg.folder !== getViewLocation(view)) {
-              view[0].currentFile = null;
-              view[0].currentFolder = msg.folder;
-              if (view[0].vId === 0) setTitle(basename(msg.folder));
-              replaceHistory(view, join(view[0].currentFolder, view[0].currentFile));
-              updatePath(view);
-            }
-            view[0].switchRequest = false;
-            view[0].currentData = msg.data;
-            openDirectory(view, view[0].currentData);
-          } else if (view[0].dataset.type === "media") {
-            view[0].currentData = msg.data;
-            // TODO: Update media array
-          }
-          break;
+          view[0].switchRequest = false;
+          view[0].currentData = msg.data;
+          openDirectory(view, view[0].currentData);
+        } else if (view[0].dataset.type === "media") {
+          view[0].currentData = msg.data;
+          // TODO: Update media array
         }
-        case "UPDATE_BE_FILE": {
-          openFile(getView(vId), msg.folder, msg.file);
-          break;
+        break;
+      }
+      case "UPDATE_BE_FILE": {
+        openFile(getView(vId), msg.folder, msg.file);
+        break;
+      }
+      case "RELOAD": {
+        if (msg.css) {
+          $("#css").remove();
+          $("<style id='css'>" + msg.css + "</style>").appendTo($("head"));
+        } else location.reload(true);
+        break;
+      }
+      case "SHARELINK": {
+        hideSpinner(view);
+        if (view.find(".info-box.link.in").length) {
+          view.find(".link-out")[0].textContent = getFullLink(msg.link);
+        } else {
+          showLink(view, msg.link, msg.attachement);
         }
-        case "RELOAD": {
-          if (msg.css) {
-            $("#css").remove();
-            $("<style id='css'>" + msg.css + "</style>").appendTo($("head"));
-          } else location.reload(true);
-          break;
-        }
-        case "SHARELINK": {
-          hideSpinner(view);
-          if (view.find(".info-box.link.in").length) {
-            view.find(".link-out")[0].textContent = getFullLink(msg.link);
-          } else {
-            showLink(view, msg.link, msg.attachement);
-          }
-          break;
-        }
-        case "USER_LIST": {
-          updateUsers(msg.users);
-          break;
-        }
-        case "SAVE_STATUS": {
-          hideSpinner(view);
-          const file = view.find(".path li:last-child");
-          file.removeClass("dirty").addClass(msg.status === 0 ? "saved" : "save-failed");
-          setTimeout(() => {
-            file.removeClass("saved save-failed");
-          }, 3000);
-          break;
-        }
-        case "SETTINGS": {
-          Object.keys(msg.settings).forEach((setting) => {
-            droppy[setting] = msg.settings[setting];
-          });
+        break;
+      }
+      case "USER_LIST": {
+        updateUsers(msg.users);
+        break;
+      }
+      case "SAVE_STATUS": {
+        hideSpinner(view);
+        const file = view.find(".path li:last-child");
+        file.removeClass("dirty").addClass(msg.status === 0 ? "saved" : "save-failed");
+        setTimeout(() => {
+          file.removeClass("saved save-failed");
+        }, 3000);
+        break;
+      }
+      case "SETTINGS": {
+        Object.keys(msg.settings).forEach((setting) => {
+          droppy[setting] = msg.settings[setting];
+        });
 
-          $("#about-title")[0].textContent = "droppy " + droppy.version;
-          $("#about-engine")[0].textContent = droppy.engine;
+        $("#about-title")[0].textContent = "droppy " + droppy.version;
+        $("#about-engine")[0].textContent = droppy.engine;
 
-          droppy.themes = droppy.themes.split("|");
-          droppy.modes = droppy.modes.split("|");
+        droppy.themes = droppy.themes.split("|");
+        droppy.modes = droppy.modes.split("|");
 
-          // Move own theme to top of theme list
-          droppy.themes.pop();
-          droppy.themes.unshift("droppy");
+        // Move own theme to top of theme list
+        droppy.themes.pop();
+        droppy.themes.unshift("droppy");
 
-          // Insert plain mode on the top
-          droppy.modes.unshift("plain");
+        // Insert plain mode on the top
+        droppy.modes.unshift("plain");
 
-          if (droppy.dev) {
-            window.droppy = droppy;
-          }
-          if (droppy.readOnly) {
-            document.documentElement.classList.add("readonly");
-          }
-          if (droppy.demo || droppy.public) {
-            document.documentElement.classList.add("public");
-          }
-          if (!droppy.watch) {
-            document.documentElement.classList.add("nowatch");
-          }
-          break;
+        if (droppy.dev) {
+          window.droppy = droppy;
         }
-        case "MEDIA_FILES": {
-          loadMedia(view, msg.files);
-          break;
+        if (droppy.readOnly) {
+          document.documentElement.classList.add("readonly");
         }
-        case "SEARCH_RESULTS": {
-          openDirectory(view, msg.results, true);
-          break;
+        if (droppy.demo || droppy.public) {
+          document.documentElement.classList.add("public");
         }
-        case "ERROR": {
-          showError(view, msg.text);
-          hideSpinner(view);
-          break;
+        if (!droppy.watch) {
+          document.documentElement.classList.add("nowatch");
         }
+        break;
+      }
+      case "MEDIA_FILES": {
+        loadMedia(view, msg.files);
+        break;
+      }
+      case "SEARCH_RESULTS": {
+        openDirectory(view, msg.results, true);
+        break;
+      }
+      case "ERROR": {
+        showError(view, msg.text);
+        hideSpinner(view);
+        break;
+      }
       }
     });
   }
@@ -487,7 +487,7 @@
   //  Authentication page
   // ============================================================================
   function initAuthPage(firstrun) {
-    $("#remember").off("click").on("click", function () {
+    $("#remember").off("click").on("click", function() {
       $(this).toggleClass("checked");
     });
     $("#form").off("submit").on("submit", (e) => {
@@ -532,7 +532,7 @@
     $(window).off("resize").on("resize", () => {
       clearTimeout(droppy.resizeTimer);
       droppy.resizeTimer = setTimeout(() => {
-        $(".view").each(function () {
+        $(".view").each(function() {
           checkPathOverflow($(this));
         });
       }, 25);
@@ -604,7 +604,7 @@
             if (!images.length && performance.now() - start < 5000) {
               return setTimeout(findImages, 25);
             }
-            images.each(function () {
+            images.each(function() {
               urlToPngBlob(this.src, (blob) => {
                 uploadBlob(view, blob);
                 $(".ce").empty();
@@ -618,7 +618,7 @@
 
     // Hacks for Safari to be able to paste
     if (droppy.detects.safari) {
-      $("body").append('<div class="ce" contenteditable>');
+      $("body").append("<div class=\"ce\" contenteditable>");
       window.addEventListener("keydown", (e) => {
         if (e.metaKey && e.which === 86 /* V */) {
           if (e.target.nodeName.toLowerCase() !== "input") {
@@ -718,7 +718,7 @@
   }
 
   function uploadSuccess(id) {
-    const info = $('.upload-info[data-id="' + id + '"]');
+    const info = $(".upload-info[data-id=\"" + id + "\"]");
     info.find(".upload-bar")[0].style.width = "100%";
     info.find(".upload-percentage")[0].textContent = "100%";
     info.find(".upload-title")[0].textContent = "Processing ...";
@@ -731,14 +731,14 @@
   function uploadFinish(view, id, _cancelled) {
     view[0].isUploading = false;
     setTitle(basename(view[0].currentFolder));
-    $('.upload-info[data-id="' + id + '"]').removeClass("in").transitionend(function () {
+    $(".upload-info[data-id=\"" + id + "\"]").removeClass("in").transitionend(function() {
       $(this).remove();
     });
   }
 
   function uploadProgress(view, id, sent, total) {
     if (!view[0].isUploading) return;
-    const info = $('.upload-info[data-id="' + id + '"]');
+    const info = $(".upload-info[data-id=\"" + id + "\"]");
     const progress = (Math.round((sent / total) * 1000) / 10).toFixed(0) + "%";
     const now = performance.now();
     const speed = sent / ((now - view[0].uploadStart) / 1e3);
@@ -760,7 +760,7 @@
   function entryRename(view, entry, wasEmpty, callback) {
     // Populate active files list
     const activeFiles = []; // TODO: Update when files change
-    entry.siblings(".data-row").each(function () { // exclude existing entry for case-only rename
+    entry.siblings(".data-row").each(function() { // exclude existing entry for case-only rename
       $(this).removeClass("editing invalid");
       const name = droppy.caseSensitive ? this.dataset.name : this.dataset.name.toLowerCase();
       if (name) activeFiles.push(name);
@@ -774,9 +774,9 @@
     entry.addClass("editing");
 
     // Add inline element
-    const renamer = $('<input type="text" class="inline-namer" value="' + linkText +
-      '" placeholder="' + linkText + '">').insertAfter(link);
-    renamer.off("input").on("input", function () {
+    const renamer = $("<input type=\"text\" class=\"inline-namer\" value=\"" + linkText +
+      "\" placeholder=\"" + linkText + "\">").insertAfter(link);
+    renamer.off("input").on("input", function() {
       const input = this.value;
       const valid = validFilename(input, droppy.platform);
       const exists = activeFiles.some((file) => {
@@ -819,7 +819,8 @@
   function stopEdit(view, entry, wasEmpty) {
     entry.removeClass("editing invalid");
     view.find(".inline-namer, .data-row.new-file, .data-row.new-folder").remove();
-    if (wasEmpty) view.find(".content").html(Handlebars.templates.directory({entries: []}));
+    const isPriv = droppy.priv;
+    if (wasEmpty) view.find(".content").html(Handlebars.templates.directory({entries: [], isPriv}));
   }
 
   function toggleCatcher(show) {
@@ -987,7 +988,7 @@
     function addPart(name, path) {
       const li = $("<li><a>" + name + "</a></li>");
       li[0].dataset.destination = path;
-      li.off("click").on("click", function (event) {
+      li.off("click").on("click", function(event) {
         const view = $(event.target).parents(".view");
         if (droppy.socketWait) return;
         if ($(this).is(":last-child")) {
@@ -1007,7 +1008,7 @@
     }
 
     function removePart(i) {
-      view.find(".path li").slice(i).replaceClass("in", "gone").transitionend(function () {
+      view.find(".path li").slice(i).replaceClass("in", "gone").transitionend(function() {
         $(this).remove();
       });
     }
@@ -1017,10 +1018,10 @@
   function checkPathOverflow(view) {
     let width = 40;
     const space = view[0].clientWidth;
-    view.find(".path li.in").each(function () {
+    view.find(".path li.in").each(function() {
       width += $(this)[0].clientWidth;
     });
-    view.find(".path li").each(function () {
+    view.find(".path li").each(function() {
       this.style.left = width > space ? (space - width) + "px" : 0;
     });
   }
@@ -1086,7 +1087,9 @@
     const sort = {type: "", mtime: "", size: ""};
     sort[sortBy] = "active " + (view[0].sortAsc ? "up" : "down");
 
-    const html = Handlebars.templates.directory({entries, sort, isSearch});
+    const isPriv = droppy.priv;
+
+    const html = Handlebars.templates.directory({entries, sort, isPriv, isSearch});
     loadContent(view, "directory", null, html).then(() => {
       // Upload button on empty page
       view.find(".empty").off("click").on("click", (e) => {
@@ -1101,21 +1104,21 @@
       });
 
       // Switch into a folder
-      view.find(".folder-link").off("click").on("click", function (e) {
+      view.find(".folder-link").off("click").on("click", function(e) {
         if (droppy.socketWait) return;
         updateLocation(view, $(this).parents(".data-row")[0].dataset.id);
         e.preventDefault();
       });
 
       // Click on a file link
-      view.find(".file-link").off("click").on("click", function (e) {
+      view.find(".file-link").off("click").on("click", function(e) {
         if (droppy.socketWait) return;
         const view = $(e.target).parents(".view");
         openFile(view, view[0].currentFolder, e.target.textContent.trim(), {ref: this});
         e.preventDefault();
       });
 
-      view.find(".data-row").each(function (index) {
+      view.find(".data-row").each(function(index) {
         this.setAttribute("order", index);
       });
 
@@ -1146,7 +1149,7 @@
         }, 2000);
       });
 
-      view.find(".share-file").off("click").on("click", function () {
+      view.find(".share-file").off("click").on("click", function() {
         if (droppy.socketWait) return;
         requestLink(
           $(this).parents(".view"),
@@ -1155,7 +1158,8 @@
         );
       });
 
-      view.find(".delete-file").off("click").on("click", function () {
+      view.find(".delete-file").off("click").on("click", function() {
+        if (!droppy.priv) return;
         $("#confirmation-box").addClass("in");
         toggleCatcher();
         if (droppy.socketWait) return;
@@ -1172,11 +1176,11 @@
         });
       });
 
-      view.find(".icon-play, .icon-view").off("click").on("click", function () {
+      view.find(".icon-play, .icon-view").off("click").on("click", function() {
         $(this).parents(".data-row").find(".file-link")[0].click();
       });
 
-      view.find(".header-name, .header-mtime, .header-size").off("click").on("click", function () {
+      view.find(".header-name, .header-mtime, .header-size").off("click").on("click", function() {
         sortByHeader(view, $(this));
       });
 
@@ -1190,7 +1194,7 @@
       if (view[0].isAnimating) return; // Ignore mid-animation updates. TODO: queue and update on animation-end
       view[0].dataset.type = type;
       mediaType = mediaType ? " type-" + mediaType : "";
-      content = '<div class="new content ' + type + mediaType + " " + view[0].animDirection + '">' + content + "</div>";
+      content = "<div class=\"new content " + type + mediaType + " " + view[0].animDirection + "\">" + content + "</div>";
       const navRegex = /(forward|back|center)/;
       if (view[0].animDirection === "center") {
         view.find(".content").replaceClass(navRegex, "center").before(content);
@@ -1202,7 +1206,7 @@
         view.find(".data-row").addClass("animating");
         view.find(".content:not(.new)").replaceClass(navRegex, (view[0].animDirection === "forward") ?
           "back" : (view[0].animDirection === "back") ? "forward" : "center");
-        getOtherViews(view[0].vId).each(function () {
+        getOtherViews(view[0].vId).each(function() {
           this.style.zIndex = "1";
         });
         view.find(".new").addClass(type).transition(navRegex, "center").transitionend(finish);
@@ -1211,7 +1215,7 @@
 
       function finish() {
         view[0].isAnimating = false;
-        getOtherViews(view[0].vId).each(function () {
+        getOtherViews(view[0].vId).each(function() {
           this.style.zIndex = "auto";
         });
         view.find(".content:not(.new)").remove();
@@ -1259,7 +1263,7 @@
       dropSelect[0].style.top = event.originalEvent.clientY + "px";
       dropSelect.addClass("in");
 
-      $(document.elementFromPoint(x, y)).addClass("active").one("mouseleave", function () {
+      $(document.elementFromPoint(x, y)).addClass("active").one("mouseleave", function() {
         $(this).removeClass("active");
       });
       toggleCatcher(true);
@@ -1292,7 +1296,7 @@
 
   // Set drag properties for internal drag sources
   function bindDragEvents(view) {
-    view.find(".data-row .entry-link").each(function () {
+    view.find(".data-row .entry-link").each(function() {
       this.setAttribute("draggable", "true");
     });
     view.off("dragstart").on("dragstart", (event) => {
@@ -1320,7 +1324,7 @@
     this.timer = null;
     this.data = "";
     this.isInternal = false;
-    this.refresh = function (data) {
+    this.refresh = function(data) {
       if (typeof data === "string") {
         this.data = data;
         this.isInternal = true;
@@ -1328,7 +1332,7 @@
       clearTimeout(this.timer);
       this.timer = setTimeout(this.clear, 1000);
     };
-    this.clear = function () {
+    this.clear = function() {
       if (!this.isInternal) {
         $(".dropzone").removeClass("in");
       }
@@ -1417,7 +1421,7 @@
     });
 
     // File upload button
-    view.off("click", ".af").on("click", ".af", function (e) {
+    view.off("click", ".af").on("click", ".af", function(e) {
       if ($(this).hasClass("disabled")) return;
       const view = $(e.target).parents(".view");
       // Remove the directory attributes so we get a file picker dialog
@@ -1435,7 +1439,7 @@
     }
 
     // Directory upload button
-    view.off("click", ".ad").on("click", ".ad", function (e) {
+    view.off("click", ".ad").on("click", ".ad", function(e) {
       const view = $(e.target).parents(".view");
       if ($(this).hasClass("disabled")) {
         showError(getView(0), "Your browser doesn't support directory uploading");
@@ -1456,7 +1460,7 @@
       }
     });
 
-    view.off("click", ".cf, .cd").on("click", ".cf, .cd", function (e) {
+    view.off("click", ".cf, .cd").on("click", ".cf, .cd", function(e) {
       if ($(this).hasClass("disabled")) return;
       const view = $(e.target).parents(".view");
       const content = view.find(".content");
@@ -1530,18 +1534,18 @@
       }
     }
 
-    view.off("click", ".search.toggled-off").on("click", ".search.toggled-off", function () {
+    view.off("click", ".search.toggled-off").on("click", ".search.toggled-off", function() {
       const search = $(this);
       search.removeClass("toggled-off").addClass("toggled-on");
       setTimeout(() => {
         search.find("input")[0].focus();
       }, 0);
     });
-    view.off("click", ".search.toggled-on svg").on("click", ".search.toggled-on svg", function () {
+    view.off("click", ".search.toggled-on svg").on("click", ".search.toggled-on svg", function() {
       const view = $(this).parents(".view");
       openDirectory(view, view[0].currentData);
     });
-    view.off("keyup", ".search input").on("keyup", ".search input", function (e) {
+    view.off("keyup", ".search input").on("keyup", ".search input", function(e) {
       if (e.keyCode === 27/* escape */) {
         const view = $(this).parents(".view");
         openDirectory(view, view[0].currentData);
@@ -1598,6 +1602,7 @@
     $("#entry-menu .rename").off("click").on("click", (event) => {
       event.stopPropagation();
       if (droppy.socketWait) return;
+      if (!droppy.priv) return;
 
       const entry = $(`.data-row[data-id="${droppy.menuTargetId}"]`);
       const view = entry.parents(".view");
@@ -1613,6 +1618,7 @@
     $("#entry-menu .share").off("click").on("click", (event) => {
       event.stopPropagation();
       if (droppy.socketWait) return;
+      if (!droppy.priv) return;
 
       const entry = $(`.data-row[data-id="${droppy.menuTargetId}"]`);
       const view = entry.parents(".view");
@@ -1627,9 +1633,10 @@
     });
 
     // Copy/cut a file/folder
-    $("#entry-menu .copy, #entry-menu .cut").off("click").on("click", function (event) {
+    $("#entry-menu .copy, #entry-menu .cut").off("click").on("click", function(event) {
       event.stopPropagation();
       toggleCatcher(false);
+      if (!droppy.priv) return;
       droppy.clipboard = {
         type: this.className,
         src: droppy.menuTargetId
@@ -1640,21 +1647,31 @@
     // Delete a file/folder
     $("#entry-menu .delete").off("click").on("click", (event) => {
       event.stopPropagation();
+      toggleCatcher(false);
+      if (!droppy.priv) return;
       if (droppy.socketWait) return;
 
       const entry = $(`.data-row[data-id="${droppy.menuTargetId}"]`);
       const view = entry.parents(".view");
-
-      toggleCatcher(false);
-      showSpinner(view);
-      sendMessage(view[0].vId, "DELETE_FILE", entry[0].dataset.id);
+      $("#confirmation-box").addClass("in");
+      toggleCatcher();
+      $("#confirmation-button-yes").off("click").on("click", () => {
+        $("#confirmation-box").removeClass("in");
+        showSpinner(view);
+        sendMessage(view[0].vId, "DELETE_FILE", entry[0].dataset.id);
+        toggleCatcher(false);
+      });
+      $("#confirmation-button-no").off("click").on("click", () => {
+        $("#confirmation-box").removeClass("in");
+        toggleCatcher(false);
+      });
     });
   }
 
   // Check if there's something in the clipboard
   function checkClipboard() {
     if (droppy.clipboard) {
-      $(".view").each(function () {
+      $(".view").each(function() {
         const view = $(this), button = view.find(".paste-button");
         button.addClass("in").off("click").one("click", (event) => {
           event.stopPropagation();
@@ -1708,7 +1725,7 @@
 
     let target = document.elementFromPoint(x, y);
     target = target.tagName.toLowerCase() === "a" ? $(target) : $(target).parents("a");
-    target.addClass("active").one("mouseleave", function () {
+    target.addClass("active").one("mouseleave", function() {
       $(this).removeClass("active");
     });
   }
@@ -1721,7 +1738,7 @@
     let entries = sortArrayByProp(view[0].templateEntries, header[0].dataset.sort);
     if (view[0].sortAsc) entries = entries.reverse();
     entries.forEach((_, i) => {
-      const entry = view.find('[data-name="' + entries[i].sortname + '"]')[0];
+      const entry = view.find("[data-name=\"" + entries[i].sortname + "\"]")[0];
       entry.style.order = i;
       entry.setAttribute("order", i);
     });
@@ -1925,7 +1942,7 @@
           if (!e || !e.target) return;
           preventObj.prevent = e.target.classList.contains("pswp__img");
         });
-        view[0].ps.listen("afterChange", function () {
+        view[0].ps.listen("afterChange", function() {
           // clear possible focus on buttons so spacebar works as expected
           const focused = document.activeElement;
           if ($(focused).hasClass("pswp__button")) focused.blur();
@@ -1951,7 +1968,7 @@
             zoomButtons.removeClass("hidden");
             this.currItem.container.parentNode.style.overflow = "auto"; // allow pdf scrolling
             this.currItem.container.style.transformOrigin = "center top"; // center zoom out
-            view.find("video").each(function () {
+            view.find("video").each(function() {
               this.pause();
             });
           } else if (type === "video") {
@@ -1963,7 +1980,7 @@
             imgButtons.removeClass("hidden");
             videoButtons.addClass("hidden");
             zoomButtons.removeClass("hidden");
-            view.find("video").each(function () {
+            view.find("video").each(function() {
               this.pause();
             });
           }
@@ -2183,11 +2200,11 @@
         editor.setValue(text);
         editor.clearHistory();
 
-        view.find(".exit").off("click").on("click", function () {
+        view.find(".exit").off("click").on("click", function() {
           closeDoc($(this).parents(".view"));
           editor = null;
         });
-        view.find(".save").off("click").on("click", function () {
+        view.find(".save").off("click").on("click", function() {
           save($(this).parents(".view")[0].editor);
         });
         view.find(".dl").off("click").on("click", () => {
@@ -2200,7 +2217,7 @@
         view.find(".syntax").off("click").on("click", () => {
           const shown = view.find(".mode-select").toggleClass("in").hasClass("in");
           view.find(".syntax")[shown ? "addClass" : "removeClass"]("in");
-          view.find(".mode-select").on("change", function () {
+          view.find(".mode-select").on("change", function() {
             view.find(".syntax").removeClass("in");
             view.find(".mode-select").removeClass("in");
             CodeMirror.autoLoadMode(editor, this.value);
@@ -2212,7 +2229,7 @@
           const searchField = view.find(".CodeMirror-search-field");
           if (searchField && searchField[0]) searchField[0].focus();
         });
-        view.find(".full").off("click").on("click", function () {
+        view.find(".full").off("click").on("click", function() {
           screenfull.toggle($(this).parents(".content")[0]);
         });
         hideSpinner(view);
@@ -2242,7 +2259,7 @@
         priv
       });
     });
-    box.find(".delete-user").off("click").on("click", function (event) {
+    box.find(".delete-user").off("click").on("click", function(event) {
       event.stopPropagation();
       sendMessage(null, "UPDATE_USER", {
         name: $(this).parents("li").children(".username").text().trim(),
@@ -2279,27 +2296,27 @@
       return Handlebars.templates.options({opts});
     });
 
-    $("select.theme").off("change").on("change", function () {
+    $("select.theme").off("change").on("change", function() {
       const theme = this.value;
       loadTheme(theme, () => {
         droppy.set("theme", theme);
-        $(".view").each(function () {
+        $(".view").each(function() {
           if (this.editor) this.editor.setOption("theme", theme);
         });
       });
     });
 
-    $("select.editorFontSize").off("change").on("change", function () {
+    $("select.editorFontSize").off("change").on("change", function() {
       setEditorFontSize(this.value);
     });
 
     setTimeout(() => {
-      box.addClass("in").transitionend(function () {
+      box.addClass("in").transitionend(function() {
         this.removeAttribute("style");
       });
       toggleCatcher(true);
       $("#overlay").one("click", () => {
-        box.find("select").each(function () {
+        box.find("select").each(function() {
           const option = this.className;
           let value = this.value;
 
@@ -2310,7 +2327,7 @@
           droppy.set(option, value);
           if (option === "indentUnit") droppy.set("tabSize", value);
 
-          $(".view").each(function () {
+          $(".view").each(function() {
             if (this.editor) {
               this.editor.setOption(option, value);
               if (option === "indentUnit") this.editor.setOption("tabSize", value);
@@ -2330,7 +2347,7 @@
 
     let row;
     if (typeof index === "number") {
-      row = view.find('.data-row[data-playindex="' + index + '"]');
+      row = view.find(".data-row[data-playindex=\"" + index + "\"]");
     } else {
       row = index;
     }
@@ -2366,7 +2383,7 @@
       }
 
       let i = 0;
-      row.parent().children(".playable").each(function () {
+      row.parent().children(".playable").each(function() {
         this.setAttribute("data-playindex", i++);
       });
       view[0].playlistLength = i;
@@ -2447,7 +2464,7 @@
       updateVolume(event);
       event.stopPropagation();
     });
-    bar.off("click").on("click", function (event) {
+    bar.off("click").on("click", function(event) {
       const time = player.duration *
         ((event.pageX - bar[0].getBoundingClientRect().left) / bar[0].clientWidth);
       if (!isNaN(parseFloat(time)) && isFinite(time)) {
@@ -2464,7 +2481,7 @@
       playNext($(event.target).parents(".view"));
       event.stopPropagation();
     });
-    bar.find(".pause-play").off("click").on("click", function (event) {
+    bar.find(".pause-play").off("click").on("click", function(event) {
       const icon = $(this).children("svg");
       const player = $(this).parents(".audio-bar").find(".audio-player")[0];
       if (icon[0].getAttribute("class") === "play") {
@@ -2477,11 +2494,11 @@
       event.stopPropagation();
     });
 
-    bar.find(".stop").off("click").on("click", function (event) {
+    bar.find(".stop").off("click").on("click", function(event) {
       endAudio($(this).parents(".view"));
       event.stopPropagation();
     });
-    bar.find(".shuffle").off("click").on("click", function (event) {
+    bar.find(".shuffle").off("click").on("click", function(event) {
       $(this).toggleClass("active");
       $(this).parents(".view")[0].shuffle = $(this).hasClass("active");
       event.stopPropagation();
@@ -2552,7 +2569,7 @@
 
     function splitCallback(cont, n) {
       let countDown = n;
-      return function () {
+      return function() {
         if (--countDown === 0) cont();
       };
     }
@@ -2573,7 +2590,7 @@
       }
     }
 
-    CodeMirror.requireMode = function (mode, cont) {
+    CodeMirror.requireMode = function(mode, cont) {
       if (typeof mode !== "string") mode = mode.name;
       if (CodeMirror.modes.hasOwnProperty(mode)) return ensureDeps(mode, cont);
       if (loading.hasOwnProperty(mode)) return loading[mode].push(cont);
@@ -2596,7 +2613,7 @@
       }, 200);
     };
 
-    CodeMirror.autoLoadMode = function (instance, mode) {
+    CodeMirror.autoLoadMode = function(instance, mode) {
       if (!CodeMirror.modes.hasOwnProperty(mode)) {
         CodeMirror.requireMode(mode, () => {
           instance.setOption("mode", instance.getOption("mode"));
@@ -2639,7 +2656,7 @@
         }
 
         // pause other loaded videos in this view
-        view.find("video").each(function () {
+        view.find("video").each(function() {
           if (this !== el) this.pause();
         });
 
@@ -2964,7 +2981,7 @@
     const dl = box.find(".dl-link");
     dl[attachement ? "addClass" : "removeClass"]("checked");
 
-    const select = function () {
+    const select = function() {
       const range = document.createRange(), selection = getSelection();
       range.selectNodeContents(out[0]);
       selection.removeAllRanges();
@@ -2993,7 +3010,7 @@
       copy[0].setAttribute("aria-label", "Copy to clipboard");
     });
 
-    dl.off("click").on("click", function () {
+    dl.off("click").on("click", function() {
       $(this).toggleClass("checked");
       requestLink($(this).parents(".view"), view[0].sharelinkId, $(this).hasClass("checked"));
     });
@@ -3001,7 +3018,7 @@
 
   function debounce(func, wait, immediate) {
     let timeout;
-    return function (...args) {
+    return function(...args) {
       const later = () => {
         timeout = null;
         if (!immediate) func(...args);
@@ -3016,7 +3033,7 @@
   function throttle(func, threshold) {
     if (!threshold) threshold = 250;
     let last, deferTimer;
-    return function (...args) {
+    return function(...args) {
       const cur = performance.now();
       if (last && cur < last + threshold) {
         clearTimeout(deferTimer);

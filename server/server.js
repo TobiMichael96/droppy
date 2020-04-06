@@ -65,8 +65,12 @@ module.exports = function droppy(opts, isStandalone, dev, callback) {
   setupProcess(isStandalone);
 
   async.series([
-    function(cb) { utils.mkdir([paths.files, paths.config], cb); },
-    function(cb) { if (isStandalone) fs.writeFile(paths.pid, process.pid, cb); else cb(); },
+    function(cb) {
+      utils.mkdir([paths.files, paths.config], cb);
+    },
+    function(cb) {
+      if (isStandalone) fs.writeFile(paths.pid, process.pid, cb); else cb();
+    },
     function(cb) {
       cfg.init(opts, (err, conf) => {
         if (!err) {
@@ -92,11 +96,17 @@ module.exports = function droppy(opts, isStandalone, dev, callback) {
       log.info("Loading resources ...");
       resources.load(config.dev, (err, c) => {
         log.info("Loading resources done");
-        cache = c; cb(err);
+        cache = c;
+        cb(err);
       });
     },
-    function(cb) { cleanupLinks(cb); },
-    function(cb) { if (config.dev) debug(); cb(); },
+    function(cb) {
+      cleanupLinks(cb);
+    },
+    function(cb) {
+      if (config.dev) debug();
+      cb();
+    },
     function(cb) {
       if (config.demo) {
         process.title = "droppy-demo";
@@ -105,7 +115,11 @@ module.exports = function droppy(opts, isStandalone, dev, callback) {
         require("./demo.js").init(cb);
       } else cb();
     },
-    function(cb) { if (isStandalone) { startListeners(cb); } else cb(); },
+    function(cb) {
+      if (isStandalone) {
+        startListeners(cb);
+      } else cb();
+    },
     function(cb) {
       log.info("Caching files ...");
       filetree.init(config);
@@ -122,7 +136,8 @@ module.exports = function droppy(opts, isStandalone, dev, callback) {
             if (!clients[client].ws) return;
             try {
               clients[client].ws.ping();
-            } catch (err) {}
+            } catch (err) {
+            }
           });
         }, config.keepAlive);
       }
@@ -396,6 +411,7 @@ function createListener(handler, opts, callback) {
         if (err && err.message) log.debug(null, null, err.message);
         if (socket.writable) socket.destroy();
       }
+
       server.on("tlsClientError", tlsError);
 
       // TLS tickets - regenerate keys every hour, Node.js 4.0
@@ -453,20 +469,22 @@ function onWebSocketRequest(ws, req) {
     const priv = Boolean((db.get("sessions")[cookie] || {}).privileged);
 
     if (msg.type === "REQUEST_SETTINGS") {
-      sendObj(sid, {type: "SETTINGS", vId, settings: {
-        priv,
-        version       : pkg.version,
-        dev           : config.dev,
-        demo          : config.demo,
-        public        : config.public,
-        readOnly      : config.readOnly,
-        watch         : config.watch,
-        engine        : "node " + process.version.substring(1),
-        platform      : process.platform,
-        caseSensitive : process.platform === "linux", // TODO: actually test the filesystem
-        themes        : Object.keys(cache.themes).sort().join("|"),
-        modes         : Object.keys(cache.modes).sort().join("|"),
-      }});
+      sendObj(sid, {
+        type: "SETTINGS", vId, settings: {
+          priv,
+          version: pkg.version,
+          dev: config.dev,
+          demo: config.demo,
+          public: config.public,
+          readOnly: config.readOnly,
+          watch: config.watch,
+          engine: "node " + process.version.substring(1),
+          platform: process.platform,
+          caseSensitive: process.platform === "linux", // TODO: actually test the filesystem
+          themes: Object.keys(cache.themes).sort().join("|"),
+          modes: Object.keys(cache.modes).sort().join("|"),
+        }
+      });
     } else if (msg.type === "REQUEST_UPDATE") {
       if (!validatePaths(msg.data, msg.type, ws, sid, vId)) return;
       if (!clients[sid]) clients[sid] = {views: [], ws}; // This can happen when the server restarts
@@ -546,7 +564,7 @@ function onWebSocketRequest(ws, req) {
         if (err) {
           sendError(sid, vId, `Error saving: ${err.message}`);
           log.error(err);
-        } else sendObj(sid, {type: "SAVE_STATUS", vId, status : err ? 1 : 0});
+        } else sendObj(sid, {type: "SAVE_STATUS", vId, status: err ? 1 : 0});
       });
     } else if (msg.type === "CLIPBOARD") {
       const src = msg.data.src;
@@ -586,7 +604,7 @@ function onWebSocketRequest(ws, req) {
       const rDst = msg.data.dst;
       // Disallow whitespace-only and empty strings in renames
       if (!validatePaths([rSrc, rDst], msg.type, ws, sid, vId) ||
-          /^\s*$/.test(rDst) || rDst === "" || rSrc === rDst) {
+        /^\s*$/.test(rDst) || rDst === "" || rSrc === rDst) {
         log.info(ws, null, "Invalid rename request: " + rSrc + "-> " + rDst);
         sendError(sid, vId, "Invalid rename request");
         return;
@@ -663,7 +681,7 @@ function onWebSocketRequest(ws, req) {
       });
     } else if (msg.type === "SEARCH") {
       const query = msg.data.query;
-      const dir =  msg.data.dir;
+      const dir = msg.data.dir;
       if (!validatePaths(dir, msg.type, ws, sid, vId)) return;
       sendObj(sid, {
         type: "SEARCH_RESULTS",
@@ -856,6 +874,7 @@ function handleGETandHEAD(req, res) {
 }
 
 const rateLimited = [];
+
 function handlePOST(req, res) {
   const URI = decodeURIComponent(req.url);
   // unauthenticated POSTs
@@ -899,8 +918,8 @@ function handlePOST(req, res) {
     res.setHeader("Content-Type", "text/plain");
     utils.readJsonBody(req).then(postData => {
       if (postData.username && postData.password &&
-          typeof postData.username === "string" &&
-          typeof postData.password === "string") {
+        typeof postData.username === "string" &&
+        typeof postData.password === "string") {
         db.addOrUpdateUser(postData.username, postData.password, true);
         cookies.create(req, res, postData);
         firstRun = false;
@@ -1301,15 +1320,15 @@ function removeClientPerDir(sid, vId) {
 
 function debug() {
   require("chokidar").watch(paths.client, {
-    alwaysStat    : true,
-    ignoreInitial : true
+    alwaysStat: true,
+    ignoreInitial: true
   }).on("change", file => {
     setTimeout(() => { // prevent EBUSY on win32
       if (/\.css$/.test(file)) {
         cache.res["style.css"] = resources.compileCSS();
         sendObjAll({
           type: "RELOAD",
-          css: String(cache.res["style.css"].data).replace('"sprites.png"', '"!/res/sprites.png"')
+          css: String(cache.res["style.css"].data).replace("\"sprites.png\"", "\"!/res/sprites.png\"")
         });
       } else if (/\.(js|hbs)$/.test(file)) {
         cache.res["client.js"] = resources.compileJS();
@@ -1461,6 +1480,7 @@ function validateRequest(req) {
 }
 
 const cbs = [];
+
 function tlsInit(opts, cb) {
   if (!cbs[opts.index]) {
     cbs[opts.index] = [cb];
@@ -1475,7 +1495,8 @@ function tlsInit(opts, cb) {
 function tlsSetup(opts, cb) {
   if (typeof opts.key !== "string") {
     return cb(new Error("Missing TLS option 'key'"));
-  } if (typeof opts.cert !== "string") {
+  }
+  if (typeof opts.cert !== "string") {
     return cb(new Error("Missing TLS option 'cert'"));
   }
 
@@ -1553,6 +1574,9 @@ function endProcess(signal) {
     }
   });
   if (count > 0) log.info("Closed " + count + " WebSocket" + (count > 1 ? "s" : ""));
-  try { fs.unlinkSync(paths.pid); } catch (err) {}
+  try {
+    fs.unlinkSync(paths.pid);
+  } catch (err) {
+  }
   process.exit(0);
 }

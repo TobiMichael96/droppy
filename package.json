@@ -75,7 +75,7 @@
     "terser": "^4.0.0",
     "updates": "^8.1.0",
     "uppie": "^1.1.1",
-    "ver": "^5.0.1"
+    "versions": "^8.2.7"
   },
   "files": [
     "client",
