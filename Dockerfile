@@ -1,5 +1,4 @@
 FROM node:alpine
-MAINTAINER silverwind
 
 # Copy files
 COPY ["client", "/droppy/client"]

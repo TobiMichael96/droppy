@@ -538,7 +538,7 @@ nav {
 .search svg {
   left: 0;
   top: .4rem;
-  fill: $greya;
+  fill: grey;
   cursor: pointer;
 }
 
@@ -1112,6 +1112,49 @@ video {
   border-radius: 4px;
   text-decoration: underline;
 }
+
+/* =============================== Confirmation box =============================== */
+
+#confirmation-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  background: #eee;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  color: #333;
+  height: 100px;
+  top: 50%;
+  left: 50%;
+  opacity: 0;
+  visibility: hidden;
+  position: fixed;
+  transition: .15s, visibility 0s .15s;
+  transform: translate(-50%, -50%);
+  width: 450px;
+  text-align: center;
+  z-index: 65;
+}
+#confirmation-box.in { opacity: 1; visibility: visible; transition: .15s }
+
+#confirmation-engine {
+  font-size: .8em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#confirmation-button-box{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+.confirmation-button>svg{
+  margin-bottom: -3px;
+}
+
+.confirmation-button:hover {color: #fff }
 
 /* ================================= Prefs ================================ */
 

@@ -19,10 +19,9 @@ build:
 publish:
 	if git ls-remote --exit-code origin &>/dev/null; then git push -u -f --tags origin master; fi
 	if git ls-remote --exit-code git &>/dev/null; then git push -u -f --tags git master; fi
-	npm publish
 
 docker:
-	$(eval IMAGE := silverwind/droppy)
+	$(eval IMAGE := ausraster/droppy)
 	@echo Preparing docker image $(IMAGE)...
 	docker pull node:alpine
 	sed -i "s/^FROM.\+/FROM node:alpine/g" Dockerfile
@@ -31,33 +30,11 @@ docker:
 	docker build --no-cache=true --squash -t $(IMAGE) .
 	docker tag "$$(docker images -qa $(IMAGE):latest)" $(IMAGE):"$$(cat package.json | jq -r .version)"
 
-	$(eval IMAGE := silverwind/armhf-droppy)
-	@echo Preparing docker image $(IMAGE)...
-	docker pull arm32v6/node:alpine
-	sed -i "s/^FROM.\+/FROM arm32v6\/node:alpine/g" Dockerfile
-	docker rm -f "$$(docker ps -a -f='ancestor=$(IMAGE)' -q)" 2>/dev/null || true
-	docker rmi "$$(docker images -qa $(IMAGE))" 2>/dev/null || true
-	docker build --no-cache=true --squash -t $(IMAGE) .
-	docker tag "$$(docker images -qa $(IMAGE):latest)" $(IMAGE):"$$(cat package.json | jq -r .version)"
-
-	$(eval IMAGE := silverwind/arm64v8-droppy)
-	@echo Preparing docker image $(IMAGE)...
-	docker pull arm64v8/node:alpine
-	sed -i "s/^FROM.\+/FROM arm64v8\/node:alpine/g" Dockerfile
-	docker rm -f "$$(docker ps -a -f='ancestor=$(IMAGE)' -q)" 2>/dev/null || true
-	docker rmi "$$(docker images -qa $(IMAGE))" 2>/dev/null || true
-	docker build --no-cache=true --squash -t $(IMAGE) .
-	docker tag "$$(docker images -qa $(IMAGE):latest)" $(IMAGE):"$$(cat package.json | jq -r .version)"
-
 	sed -i "s/^FROM.\+/FROM node:alpine/g" Dockerfile
 
 docker-push:
-	docker push silverwind/droppy:"$$(cat package.json | jq -r .version)"
-	docker push silverwind/droppy:latest
-	docker push silverwind/armhf-droppy:"$$(cat package.json | jq -r .version)"
-	docker push silverwind/armhf-droppy:latest
-	docker push silverwind/arm64v8-droppy:"$$(cat package.json | jq -r .version)"
-	docker push silverwind/arm64v8-droppy:latest
+	docker push ausraster/droppy:"$$(cat package.json | jq -r .version)"
+	docker push ausraster/droppy:latest
 
 deps:
 	rm -rf node_modules
